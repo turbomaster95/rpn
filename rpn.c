@@ -4,6 +4,8 @@
 #include <string.h>
 #include <limits.h>
 
+#define MAX_STACK 256
+
 enum Tokens {
     TOK_UNK = 0,
     TOK_ADD,
@@ -56,7 +58,7 @@ void print_stack(const int *stack, int stackc, int capacity) {
             printf("|");
         }
 
-        printf("...");
+        printf("0|...");
     }
 
     printf("]\n");
@@ -66,7 +68,7 @@ int main(void) {
     char input[128];
     Token tokens[256];
     int pos = 0;
-    int stack[256];
+    int stack[MAX_STACK];
     int stackc = 0;
 
     memset(tokens, 0, sizeof(tokens));
@@ -83,8 +85,8 @@ int main(void) {
                 return 1;
             }
 
-            if (strcmp(p, "[]") == 0) {
-                print_stack(stack, stackc, sizeof(stack) / sizeof(stack[0]));
+            if (strcmp(p, ".s") == 0) {
+                print_stack(stack, stackc, MAX_STACK);
             } else if (strcmp(p, "+") == 0) {
                 int right;
                 int left;
@@ -99,7 +101,7 @@ int main(void) {
                     pop(stack, &stackc, &left);
 
                     if (!push(stack, &stackc, left + right,
-                               sizeof(stack) / sizeof(stack[0]))) {
+                               MAX_STACK)) {
                         fprintf(stderr, "[||///\n");
                         return 1;
                     }
@@ -112,15 +114,46 @@ int main(void) {
 
                 if (stackc == 0) {
                     fprintf(stderr, "[] --/--> 2[] ==> [0|0|0|0|0|0]\n");
-                } else if (stackc >= (int)(sizeof(stack) / sizeof(stack[0]))) {
+                } else if (stackc >= (int)MAX_STACK) {
                     fprintf(stderr, "[||///\n");
                     return 1;
                 } else {
                     push(stack, &stackc, stack[stackc - 1],
-                         sizeof(stack) / sizeof(stack[0]));
+                         MAX_STACK);
                 }
+            } else if (strcmp(p, "#") == 0) {
+            		int temp;
+            		if (stackc == 0) {
+            		    fprintf(stderr, "[0|0|0|0] <--/-- ÷\n");
+            		} else if (stackc >= (int)MAX_STACK) {
+            		    fprintf(stderr, "[||///\n");
+            		} else {
+            		    pop(stack, &stackc, &temp);
+            		}
             } else if (strcmp(p, ".e") == 0) {
                 return EXIT_SUCCESS;
+      	    } else if (strcmp(p, "-") == 0) {
+                int right, left;
+	              if (stackc < 2) {
+	                  fprintf(stderr, "?? ops -> -\n");
+      	        } else {
+	                  pop(stack, &stackc, &right);
+                    pop(stack, &stackc, &left);
+	                  push(stack, &stackc, left - right, MAX_STACK);
+	                  printf("%d\n", stack[stackc - 1]);
+	              }
+	          } else if (strcmp(p, "~") == 0) {
+	              if (stackc < 2) {
+                    fprintf(stderr, "?? ops -> ~\n");
+	              } else {
+	                  int top = stack[stackc - 1];
+	                  stack[stackc - 1] = stack[stackc - 2];
+	                                                              stack[stackc - 2] = top;
+	                                                                  }
+	                                                                  
+	                                  }
+	                  }
+	          }
             } else {
                 char *endptr;
                 long value;
@@ -142,7 +175,7 @@ int main(void) {
                     pos++;
 
                     if (!push(stack, &stackc, (int)value,
-                               sizeof(stack) / sizeof(stack[0]))) {
+                               MAX_STACK)) {
                         fprintf(stderr, "[||///\n");
                         return 1;
                     }
